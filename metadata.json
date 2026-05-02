@@ -1,0 +1,6 @@
+{
+  "name": "MDL to Criticker Migrator",
+  "description": "Automate migration of movie and TV show ratings from MyDramaList to Criticker with TMDB matching and QA dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
