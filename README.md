@@ -1,4 +1,11 @@
-# MDL to Criticker Sync
+<h1 align="center">MDL to Criticker Sync</h1>
+
+<p align="center">
+<a href="https://www.aekansh.in/">
+  <img width="1280" height="640" alt="Composio banner" src="./docs/banner.png">
+</a>
+
+</p>
 
 A migration tool designed to help users seamlessly transfer their watched drama and movie lists from MyDramaList (MDL) to Criticker. The tool fetches your ratings, matches them against the TMDB/IMDb database, and generates a formatted CSV file ready for import into Criticker.
 
