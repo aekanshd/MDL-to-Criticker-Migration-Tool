@@ -73,8 +73,6 @@ At the bottom of the review page, you can generate your final CSV for Criticker.
 
 ## 📸 Screenshots
 
-*(Upload your screenshots to the `docs/` folder in GitHub and name them `1.png`, `2.png`, `3.png` respectively)*
-
 ### 1. Ingestion Phase
 
 ![Ingestion Phase](./docs/1.png)
