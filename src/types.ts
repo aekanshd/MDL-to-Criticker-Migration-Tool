@@ -13,6 +13,7 @@ export interface MatchedItem extends MDLItem {
   critickerScore: number; // 1-100
   imdbUrl?: string;
   isManualOverride?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface ExtractionResult {

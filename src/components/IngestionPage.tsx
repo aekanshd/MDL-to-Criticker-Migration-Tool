@@ -1,23 +1,73 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import Papa from "papaparse";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { AlertCircle, Upload, User, FileText, Code } from "lucide-react";
+import { AlertCircle, Upload, User, FileText, Code, Download } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { toast } from "sonner";
+import { MatchedItem } from "../types";
 
 interface IngestionPageProps {
   onDataReady: (items: { originalTitle: string; rating: number }[]) => void;
-  onPdfUpload: (file: File) => void;
+  onRestore: (items: MatchedItem[]) => void;
 }
 
-export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onPdfUpload }) => {
+export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRestore }) => {
   const [username, setUsername] = useState("");
   const [pastedData, setPastedData] = useState("");
+  const [selectAllData, setSelectAllData] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const data = JSON.parse(text);
+        if (data && data.items && Array.isArray(data.items)) {
+          onRestore(data.items as MatchedItem[]);
+        }
+      } catch (err) {
+        console.error("Failed to parse JSON backup", err);
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSelectAllSubmit = () => {
+    if (!selectAllData.trim()) return;
+    
+    const flattened = selectAllData.replace(/\n+/g, ' ').replace(/\t/g, ' ').replace(/\s+/g, ' ');
+    const regex = /(?:^|\s)\d+\s+(.*?)\s+(Completed|Watching|On-hold|Dropped|Plan to Watch|Undecided|Not Interested)\s+.*?(\d{4})\s+.*?\s+(\d{1,2}(?:\.\d)?)(?:\s+(?:[−-]?\s*\d+\s*\/\s*\d+\s*[+➕]?|-))?(?=\s+\d+\s+|$)/gi;
+    
+    const items: { originalTitle: string; rating: number }[] = [];
+    let match;
+    while ((match = regex.exec(flattened)) !== null) {
+        const title = match[1].trim();
+        let rating = parseFloat(match[4]);
+        if (rating > 10 && rating <= 100) rating = rating / 10;
+        if (rating > 0 && rating <= 10) items.push({ originalTitle: title, rating });
+    }
+    
+    if (items.length > 0) {
+      onDataReady(items);
+    } else {
+      toast.error("No valid entries found in the pasted text.");
+    }
+  };
 
   const handleUsernameSubmit = () => {
     // In a real world app, we'd fetch MDL here, but Cloudflare blocks us.
-    // We'll show the alternative instructions as requested.
+    if (username.trim()) {
+      toast.error("Cloudflare blocked the request. Please use Raw Paste or PDF Upload instead.", { duration: 5000 });
+    }
   };
 
   const handlePasteSubmit = () => {
@@ -68,11 +118,11 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onPdf
         <p className="text-indigo-300 italic font-serif">Seamlessly bridge your MyDramaList history to Criticker.</p>
       </div>
 
-      <Tabs defaultValue="pdf" className="w-full">
+      <Tabs defaultValue="console" className="w-full">
         <TabsList className="grid w-full grid-cols-3 glass-panel p-1 rounded-xl h-12">
-          <TabsTrigger value="username" className="data-[state=active]:bg-indigo-500/40 data-[state=active]:text-white text-slate-300 hover:text-white rounded-lg transition-colors"><User className="w-4 h-4 mr-2" /> Username</TabsTrigger>
-          <TabsTrigger value="pdf" className="data-[state=active]:bg-indigo-500/40 data-[state=active]:text-white text-slate-300 hover:text-white rounded-lg transition-colors"><Upload className="w-4 h-4 mr-2" /> PDF Upload</TabsTrigger>
-          <TabsTrigger value="paste" className="data-[state=active]:bg-indigo-500/40 data-[state=active]:text-white text-slate-300 hover:text-white rounded-lg transition-colors"><Code className="w-4 h-4 mr-2" /> Raw Paste</TabsTrigger>
+          <TabsTrigger value="console" className="data-[state=active]:bg-indigo-500/40 data-[state=active]:text-white text-slate-300 hover:text-white rounded-lg transition-colors"><Code className="w-4 h-4 mr-2" /> Console Script</TabsTrigger>
+          <TabsTrigger value="selectall" className="data-[state=active]:bg-indigo-500/40 data-[state=active]:text-white text-slate-300 hover:text-white rounded-lg transition-colors"><FileText className="w-4 h-4 mr-2" /> Select All Method</TabsTrigger>
+          <TabsTrigger value="username" className="data-[state=active]:bg-indigo-500/40 data-[state=active]:text-white text-slate-300 hover:text-white rounded-lg transition-colors"><User className="w-4 h-4 mr-2" /> Fetch using API</TabsTrigger>
         </TabsList>
 
         <TabsContent value="username">
@@ -97,43 +147,38 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onPdf
           </Card>
         </TabsContent>
 
-        <TabsContent value="pdf">
+        <TabsContent value="selectall">
           <Card className="glass-panel border-white/5 border-none shadow-2xl">
             <CardHeader>
-              <CardTitle className="text-white">PDF Export Upload</CardTitle>
-              <CardDescription className="text-slate-400">Print your MDL list to PDF (Ctrl+P) and upload it here.</CardDescription>
+              <CardTitle className="text-white">Select All Method</CardTitle>
+              <CardDescription className="text-slate-400">Select the entire webpage on MyDramaList and paste the text.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div 
-                className="border-2 border-dashed border-white/10 rounded-2xl p-12 text-center space-y-4 hover:bg-white/5 transition-all cursor-pointer group"
-                onClick={() => document.getElementById("file-upload")?.click()}
-              >
-                <div className="bg-indigo-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
-                  <Upload className="h-8 w-8 text-indigo-400" />
-                </div>
-                <div>
-                  <p className="text-xl font-medium text-white">Click or drag PDF here</p>
-                  <p className="text-sm text-slate-400">MDL Web-to-PDF print-outs work best.</p>
-                </div>
-                <input 
-                  id="file-upload" 
-                  type="file" 
-                  className="hidden" 
-                  accept="application/pdf"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) onPdfUpload(file);
-                  }}
-                />
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-black/30 backdrop-blur-md border border-white/5 rounded-md text-xs font-mono text-slate-400 mb-4">
+                <p className="font-bold mb-2 text-indigo-300 font-sans tracking-wide uppercase">// Instructions:</p>
+                <ol className="list-decimal pl-4 space-y-2 font-sans text-slate-300">
+                  <li>Go to <code className="bg-white/10 px-1 py-0.5 rounded text-indigo-200">https://mydramalist.com/dramalist/&lt;username&gt;</code></li>
+                  <li>Ensure in the filters the status is "All", and remove any other filters to get the complete list.</li>
+                  <li>Before selecting, ensure all entries in the list are rendered by scrolling to the end of the page.</li>
+                  <li>Press <kbd className="bg-white/10 px-1 py-0.5 rounded">Ctrl+A</kbd> (or <kbd className="bg-white/10 px-1 py-0.5 rounded">Cmd+A</kbd>) to select all text, then copy (<kbd className="bg-white/10 px-1 py-0.5 rounded">Ctrl+C</kbd> / <kbd className="bg-white/10 px-1 py-0.5 rounded">Cmd+C</kbd>).</li>
+                  <li>Paste the text into the text area below.</li>
+                </ol>
               </div>
+              <textarea 
+                className="w-full h-48 p-4 rounded-xl bg-black/40 border border-white/10 font-mono text-xs text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-700"
+                placeholder="Paste the 'Select All' content here..."
+                value={selectAllData}
+                onChange={(e) => setSelectAllData(e.target.value)}
+              />
+              <Button className="w-full h-12 bg-indigo-500 hover:bg-indigo-400 text-white text-lg font-bold shadow-xl shadow-indigo-500/20" onClick={handleSelectAllSubmit}>Process List</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="paste">
+        <TabsContent value="console">
           <Card className="glass-panel border-white/5 border-none shadow-2xl">
             <CardHeader>
-              <CardTitle className="text-white">Raw Data Paste</CardTitle>
+              <CardTitle className="text-white">Console Script</CardTitle>
               <CardDescription className="text-slate-400">Paste raw text extracted from MDL console or CSV.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -161,6 +206,25 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onPdf
           </Card>
         </TabsContent>
       </Tabs>
+
+      <div className="flex flex-col items-center mt-12 bg-indigo-500/10 border border-indigo-500/30 p-6 rounded-2xl shadow-xl max-w-sm mx-auto">
+        <div className="text-center mb-4">
+          <h3 className="text-white font-medium mb-1">Resume Previous Session</h3>
+          <p className="text-slate-400 text-xs text-balance">Upload a .json backup generated from a previous session to resume reviewing.</p>
+        </div>
+        <div className="relative w-full">
+          <input 
+            type="file" 
+            accept=".json"  
+            onChange={handleRestore} 
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+            ref={fileInputRef}
+          />
+          <Button size="lg" className="w-full bg-indigo-500 hover:bg-indigo-400 text-white shadow-xl shadow-indigo-500/20 font-medium">
+            <Download className="w-5 h-5 mr-2 rotate-180" /> Restore State from Backup
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

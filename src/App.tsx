@@ -8,7 +8,7 @@ import { IngestionPage } from "./components/IngestionPage";
 import { ReviewDashboard } from "./components/ReviewDashboard";
 import { ProcessingPage } from "./components/ProcessingPage";
 import { MatchedItem } from "./types";
-import { extractPdf, matchItems } from "./services/api";
+import { matchItems } from "./services/api";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
 import { Button } from "./components/ui/button";
@@ -41,53 +41,24 @@ export default function App() {
     toast.success(`Successfully matched ${matched.length} items!`);
   };
 
-  const handlePdfUpload = async (file: File) => {
-    setStep("processing");
-    try {
-      const text = await extractPdf(file);
-      
-      // Basic regex extraction for titles and scores in PDF text
-      const lines = text.split("\n");
-      const items: { originalTitle: string; rating: number }[] = [];
-      
-      lines.forEach(line => {
-        const match = line.trim().match(/(.+?)\s+(\d+(\.\d+)?)$/);
-        if (match) {
-            const title = match[1].trim();
-            let rating = parseFloat(match[2]);
-            if (rating > 10 && rating <= 100) rating = rating / 10;
-            if (rating > 0 && rating <= 10) items.push({ originalTitle: title, rating });
-        }
-      });
-
-      if (items.length === 0) {
-        throw new Error("No ratings found in PDF. Try Printing to PDF again.");
-      }
-
-      await handleDataReady(items);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to parse PDF");
-      setStep("ingestion");
-    }
-  };
-
   const updateItem = (id: string, updates: Partial<MatchedItem>) => {
     setData(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
   };
 
   const removeItem = (id: string) => {
-    setData(prev => prev.filter(item => item.id !== id));
+    setData(prev => prev.map(item => item.id === id ? { ...item, isDeleted: true } : item));
   };
 
   const handleRestore = (importedItems: MatchedItem[]) => {
     setData(importedItems);
     setTotalItems(importedItems.length);
+    setStep("qa");
     toast.success(`Restored ${importedItems.length} records!`);
   };
 
   const handleExport = (exportType: "all" | "reviewed") => {
     const toExport = data.filter(item => 
-      (exportType === "all" ? (item.status === "approved" || item.status === "pending") : item.status === "approved") && item.imdbId
+      !item.isDeleted && (exportType === "all" ? (item.status === "approved" || item.status === "pending") : item.status === "approved") && item.imdbId
     );
     
     if (toExport.length === 0) {
@@ -138,7 +109,7 @@ export default function App() {
 
         <main className="flex-1">
           {step === "ingestion" && (
-            <IngestionPage onDataReady={handleDataReady} onPdfUpload={handlePdfUpload} />
+            <IngestionPage onDataReady={handleDataReady} onRestore={handleRestore} />
           )}
 
           {step === "processing" && (
@@ -151,7 +122,6 @@ export default function App() {
               onUpdateItem={updateItem} 
               onRemoveItem={removeItem}
               onExport={handleExport}
-              onRestore={handleRestore}
             />
           )}
         </main>

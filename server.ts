@@ -3,10 +3,6 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
-import multer from "multer";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const pdf = require("pdf-parse");
 import axios from "axios";
 import dotenv from "dotenv";
 
@@ -23,20 +19,6 @@ async function startServer() {
   app.use(express.json());
 
   app.get("/api/health", (req, res) => res.json({ ok: true }));
-
-  const upload = multer({ storage: multer.memoryStorage() });
-
-  // PDF Text Extraction
-  app.post("/api/extract-pdf", upload.single("pdf"), async (req, res) => {
-    try {
-      if (!req.file) return res.status(400).json({ error: "No PDF file uploaded" });
-      const data = await pdf(req.file.buffer);
-      res.json({ text: data.text });
-    } catch (error: any) {
-      console.error("PDF Extraction Error:", error);
-      res.status(500).json({ error: "Failed to extract text from PDF" });
-    }
-  });
 
   // TMDB Proxy
   app.get("/api/tmdb/search", async (req, res) => {

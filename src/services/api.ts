@@ -1,13 +1,6 @@
 import axios from "axios";
 import { MatchedItem } from "../types";
 
-export const extractPdf = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append("pdf", file);
-  const response = await axios.post("/api/extract-pdf", formData);
-  return response.data.text;
-};
-
 export const searchTMDB = async (title: string) => {
   const response = await axios.get("/api/tmdb/search", { params: { query: title } });
   return response.data.results;

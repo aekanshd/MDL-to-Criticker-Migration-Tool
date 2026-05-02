@@ -14,51 +14,30 @@ interface ReviewDashboardProps {
   onUpdateItem: (id: string, updates: Partial<MatchedItem>) => void;
   onRemoveItem: (id: string) => void;
   onExport: (type: "reviewed" | "all") => void;
-  onRestore: (items: MatchedItem[]) => void;
 }
 
-export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdateItem, onRemoveItem, onExport, onRestore }) => {
+export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdateItem, onRemoveItem, onExport }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [overrideUrl, setOverrideUrl] = useState("");
   const [filter, setFilter] = useState("all");
   const [exportType, setExportType] = useState<"reviewed" | "all">("reviewed");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleBackup = () => {
-    const csv = Papa.unparse(items, {
-      columns: ["id", "originalTitle", "rating", "matchedTitle", "imdbId", "imdbUrl", "status", "critickerScore", "isManualOverride"]
-    });
-    const blob = new Blob([csv], { type: "text/csv" });
+    const backupData = {
+      version: "1.2",
+      timestamp: new Date().toISOString(),
+      items: items // includes isDeleted ones!
+    };
+    const json = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "mdl_sync_backup.csv";
+    a.download = "mdl_sync_backup.json";
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-  };
-
-  const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    Papa.parse<any>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if (results.data && results.data.length > 0) {
-          const restoredItems = results.data.map(row => ({
-            ...row,
-            rating: parseFloat(row.rating),
-            critickerScore: parseInt(row.critickerScore, 10),
-            isManualOverride: row.isManualOverride === "true"
-          })) as MatchedItem[];
-          onRestore(restoredItems);
-        }
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      },
-    });
   };
 
   const handleEdit = (id: string) => {
@@ -111,6 +90,8 @@ export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdat
   };
 
   const filteredItems = items.filter(item => {
+    if (item.isDeleted) return false;
+    
     if (filter === "all") return true;
     if (filter === "skipped") return item.status === "skipped";
     
@@ -150,8 +131,8 @@ export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdat
           </div>
           
           <div className="flex gap-2">
-            <div className="px-3 py-1.5 glass-panel rounded-lg text-indigo-300">Total: {items.length}</div>
-            <div className="px-3 py-1.5 glass-panel rounded-lg text-emerald-300">Matched: {items.filter(i => i.imdbId).length}</div>
+            <div className="px-3 py-1.5 glass-panel rounded-lg text-indigo-300">Total: {items.filter(i => !i.isDeleted).length}</div>
+            <div className="px-3 py-1.5 glass-panel rounded-lg text-emerald-300">Matched: {items.filter(i => !i.isDeleted && i.imdbId).length}</div>
           </div>
         </div>
       </div>
@@ -296,8 +277,8 @@ export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdat
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div> API Pipeline Ready
             </div>
             <p>
-              Verified: {items.filter(i => i.status === "approved" && i.imdbId).length} | 
-              Pending: {items.filter(i => i.status === "pending" && i.imdbId).length}
+              Verified: {items.filter(i => !i.isDeleted && i.status === "approved" && i.imdbId).length} | 
+              Pending: {items.filter(i => !i.isDeleted && i.status === "pending" && i.imdbId).length}
             </p>
             <p className="text-xs text-indigo-300/80 italic">Note: Any deleted or skipped rows will not be included in the export.</p>
           </div>
@@ -315,7 +296,7 @@ export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdat
             <Button 
               size="lg"
               onClick={() => onExport(exportType)} 
-              disabled={items.filter(i => (exportType === "all" ? (i.status === "approved" || i.status === "pending") : i.status === "approved") && i.imdbId).length === 0}
+              disabled={items.filter(i => !i.isDeleted && (exportType === "all" ? (i.status === "approved" || i.status === "pending") : i.status === "approved") && i.imdbId).length === 0}
               className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold px-8 shadow-2xl shadow-indigo-500/50 flex items-center gap-3 h-14"
             >
               <span>GENERATE (.CSV)</span>
@@ -325,22 +306,9 @@ export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdat
         </div>
 
         <div className="border-t border-indigo-500/20 pt-4 mt-2 flex flex-row gap-4 justify-start items-center">
-          <Button variant="outline" size="sm" className="text-slate-300 border-white/10 hover:bg-white/5 h-9" onClick={handleBackup}>
+          <Button size="sm" className="bg-indigo-500/20 text-indigo-100 border border-indigo-500/30 hover:bg-indigo-500/40 h-9" onClick={handleBackup}>
             <Download className="w-4 h-4 mr-2" /> Backup Entire State
           </Button>
-          
-          <div className="relative">
-            <input 
-              type="file" 
-              accept=".csv" 
-              onChange={handleRestore} 
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-              ref={fileInputRef}
-            />
-            <Button variant="outline" size="sm" className="text-slate-300 border-white/10 hover:bg-white/5 h-9 w-full pointer-events-none">
-              <Download className="w-4 h-4 mr-2 rotate-180" /> Restore State
-            </Button>
-          </div>
         </div>
       </div>
     </div>
