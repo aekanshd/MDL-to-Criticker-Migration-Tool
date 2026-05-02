@@ -90,17 +90,9 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onPdf
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Cloudflare Limitation</AlertTitle>
                 <AlertDescription>
-                  Direct fetching may fail due to MyDramaList's Cloudflare protection. Use the **Bookmarklet** or **PDF Upload** method if this fails.
+                  Direct fetching may fail due to MyDramaList's Cloudflare protection. Use the **Raw Paste** (Bookmarklet) or **PDF Upload** method if this fails.
                 </AlertDescription>
               </Alert>
-              <div className="p-4 bg-black/30 backdrop-blur-md border border-white/5 rounded-md text-xs font-mono text-slate-400">
-                <p className="font-bold mb-2 text-indigo-300 font-sans tracking-wide uppercase">// Updated Bookmarklet Method:</p>
-                <p>1. Go to MDL. 2. Open Console (F12). 3. Run script below: </p>
-                <code className="block mt-2 p-2 bg-black/50 rounded select-all break-all whitespace-pre-wrap">
-                  {bookmarkletScript}
-                </code>
-                <p className="mt-2">4. Paste result in "Raw Paste" tab.</p>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -145,6 +137,19 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onPdf
               <CardDescription className="text-slate-400">Paste raw text extracted from MDL console or CSV.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="p-4 bg-black/30 backdrop-blur-md border border-white/5 rounded-md text-xs font-mono text-slate-400 mb-4">
+                <p className="font-bold mb-2 text-indigo-300 font-sans tracking-wide uppercase">// Instructions:</p>
+                <ol className="list-decimal pl-4 space-y-2 font-sans text-slate-300">
+                  <li>Go to <code className="bg-white/10 px-1 py-0.5 rounded text-indigo-200">https://mydramalist.com/dramalist/&lt;username&gt;</code></li>
+                  <li>Ensure in the filters the status is "All", and remove any other filters to get the complete list.</li>
+                  <li>Before running the copy command, ensure all entries in the list are rendered on the page by scrolling till the end of the page.</li>
+                  <li>Open your browser console (F12) and run the script below:</li>
+                </ol>
+                <code className="block mt-3 mb-3 p-3 bg-black/50 border border-white/5 rounded select-all break-all whitespace-pre-wrap text-indigo-200">
+                  {bookmarkletScript}
+                </code>
+                <p className="font-sans text-slate-300 pl-1">5. The data is now in your clipboard. Paste the result in the text area below.</p>
+              </div>
               <textarea 
                 className="w-full h-48 p-4 rounded-xl bg-black/40 border border-white/10 font-mono text-xs text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-slate-700"
                 placeholder="Hospital Playlist 10.0&#10;Twenty-Five Twenty-One 9.5"

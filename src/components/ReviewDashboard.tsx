@@ -9,7 +9,7 @@ import { ExternalLink, Check, X, SkipForward, Edit2, Download, Trash2, Filter } 
 import { ScrollArea } from "./ui/scroll-area";
 import { getTitleByImdbId } from "../services/api";
 
-interface QADashboardProps {
+interface ReviewDashboardProps {
   items: MatchedItem[];
   onUpdateItem: (id: string, updates: Partial<MatchedItem>) => void;
   onRemoveItem: (id: string) => void;
@@ -17,7 +17,7 @@ interface QADashboardProps {
   onRestore: (items: MatchedItem[]) => void;
 }
 
-export const QADashboard: React.FC<QADashboardProps> = ({ items, onUpdateItem, onRemoveItem, onExport, onRestore }) => {
+export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdateItem, onRemoveItem, onExport, onRestore }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [overrideUrl, setOverrideUrl] = useState("");
   const [filter, setFilter] = useState("all");
@@ -129,7 +129,7 @@ export const QADashboard: React.FC<QADashboardProps> = ({ items, onUpdateItem, o
     <div className="space-y-6">
       <div className="glass-panel p-6 rounded-2xl shadow-2xl flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white">QA Review Dashboard</h2>
+          <h2 className="text-xl font-bold text-white">Review Matchings</h2>
           <p className="text-slate-400 text-sm italic">Verify matches and scores before generating the .csv export file.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 text-sm items-end sm:items-center">

@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { IngestionPage } from "./components/IngestionPage";
-import { QADashboard } from "./components/QADashboard";
+import { ReviewDashboard } from "./components/ReviewDashboard";
 import { ProcessingPage } from "./components/ProcessingPage";
 import { MatchedItem } from "./types";
 import { extractPdf, matchItems } from "./services/api";
@@ -146,7 +146,7 @@ export default function App() {
           )}
 
           {step === "qa" && (
-            <QADashboard 
+            <ReviewDashboard 
               items={data} 
               onUpdateItem={updateItem} 
               onRemoveItem={removeItem}
