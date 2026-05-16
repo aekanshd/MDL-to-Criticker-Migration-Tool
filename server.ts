@@ -13,9 +13,11 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
 
-  app.use(cors());
+  app.use(cors({
+    origin: "*"
+  }));
   app.use(express.json());
 
   app.get("/api/health", (req, res) => res.json({ ok: true }));
@@ -74,18 +76,21 @@ async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     console.log("Starting Vite in middleware mode...");
     const vite = await createViteServer({
-      server: { 
+      server: {
         middlewareMode: true,
-        host: '0.0.0.0',
-        port: 3000
+        host: '0.0.0.0'
       },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
+    const distPath = path.join(__dirname, "dist");
+
     app.use(express.static(distPath));
-    app.get("*", (req, res) => res.sendFile(path.join(distPath, "index.html")));
+
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
   }
 
   app.listen(PORT, "0.0.0.0", () => {
