@@ -127,6 +127,7 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRes
   };
 
   const bookmarkletScript = `copy(Array.from(document.querySelectorAll("tr[id^='ml']")).map(r => { const t = r.querySelector('.title span')?.innerText; const s = r.querySelector('.score')?.innerText; return (t && s && s !== '0.0') ? \`\${t} | \${s}\` : null; }).filter(Boolean).join('\\n'))`;
+  const showSponsoredAd = false; // keep the ad block available for future AdSense activation
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -140,7 +141,7 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRes
           <AlertCircle className="h-5 w-5" />
           <AlertTitle className="font-bold">TMDB API Key Missing</AlertTitle>
           <AlertDescription className="text-amber-200/80">
-            Please configure your **TMDB API Read Access Token** in the **Settings** (top right) before starting the migration. 
+            Please configure your <b>TMDB API Read Access Token</b> in the <b>Settings</b> (top right) before starting the migration. 
             The matching process requires an API key to find correct IMDb IDs.
           </AlertDescription>
         </Alert>
@@ -235,7 +236,7 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRes
         </TabsContent>
       </Tabs>
 
-      <GoogleAd />
+      {showSponsoredAd && <GoogleAd />}
 
       <div className="flex flex-col items-center mt-12 bg-indigo-500/10 border border-indigo-500/30 p-6 rounded-2xl shadow-xl max-w-sm mx-auto">
         <div className="text-center mb-4">

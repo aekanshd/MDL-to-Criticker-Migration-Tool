@@ -132,7 +132,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">MDL ➔ Criticker Sync</h1>
-              <p className="text-indigo-300 text-xs">MyDramaList Migration Pipeline v1.2</p>
+              <p className="text-indigo-300 text-xs">MyDramaList Migration Pipeline v1.6</p>
             </div>
           </div>
 
@@ -171,6 +171,13 @@ export default function App() {
           )}
         </main>
       </div>
+
+      <footer className="max-w-6xl mx-auto px-4 pb-8 text-center text-[12px] text-slate-400 relative z-10">
+        <p className="leading-relaxed">
+          Made with ❤️ by <a href="https://www.aekansh.in/" target="_blank" className="text-indigo-300 hover:text-indigo-100 transition-colors">Aekansh Dixit</a>. For personal use only. The author is not liable for any misuse, breach, or other issues arising from use of this tool.
+        </p>
+      </footer>
+
       <Toaster position="bottom-right" richColors />
     </div>
   );
