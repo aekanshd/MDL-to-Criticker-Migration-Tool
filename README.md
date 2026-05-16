@@ -20,6 +20,11 @@ A migration tool designed to help users seamlessly transfer their watched drama 
 
 ## 📖 How to Use
 
+### 0. API Configuration & Security
+Before you begin, click the **Settings (gear)** icon in the top right corner. 
+- You must provide a **TMDB API Read Access Token** to allow the application to find matching IMDb IDs.
+- **Privacy & Security:** Your API key is safely encrypted and stored in your browser. It is not sent to the server except only when making API calls to TMDb.
+
 ### 1. Extract Data from MyDramaList (Ingestion)
 
 The app offers three methods to import your lists:
@@ -94,7 +99,7 @@ At the bottom of the review page, you can generate your final CSV for Criticker.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React, Vite, Tailwind CSS, shadcn/ui, framer-motion, lucide-react
+- **Frontend**: React, Vite, Tailwind CSS, shadcn/ui, framer-motion, lucide-react, crypto-js
 - **Backend/API**: Express (Node.js), Axios
 - **External Apis**: TMDB API
 
@@ -105,12 +110,9 @@ At the bottom of the review page, you can generate your final CSV for Criticker.
    ```bash
    npm install
    ```
-3. Create a `.env` file based on `.env.example` and add your TMDB API Key. 
-   *(You can get a TMDB API Key by registering an account at [The Movie Database (TMDB)](https://www.themoviedb.org/documentation/api))*
-   ```env
-   TMDB_READ_ACCESS_TOKEN=your_token_here
-   ```
-4. Start the development server:
+3. Start the development server:
    ```bash
    npm run dev
    ```
+4. Open the app and click the **Settings** icon to add your TMDB API Key.
+   *(Optional: You can also set it as an environment variable by creating a `.env` file with `TMDB_READ_ACCESS_TOKEN=your_token_here`).*

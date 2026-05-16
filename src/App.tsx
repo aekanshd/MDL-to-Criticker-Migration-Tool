@@ -3,16 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IngestionPage } from "./components/IngestionPage";
 import { ReviewDashboard } from "./components/ReviewDashboard";
 import { ProcessingPage } from "./components/ProcessingPage";
+import { SettingsDialog } from "./components/SettingsDialog";
 import { MatchedItem } from "./types";
 import { matchItems } from "./services/api";
+import { encryptToken, decryptToken } from "./lib/encryption";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
 import { Button } from "./components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 
 type Step = "ingestion" | "processing" | "qa";
 
@@ -21,8 +23,24 @@ export default function App() {
   const [data, setData] = useState<MatchedItem[]>([]);
   const [progress, setProgress] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
+  const [tmdbToken, setTmdbToken] = useState(() => sessionStorage.getItem("tmdb_token") || "");
+
+  useEffect(() => {
+    if (tmdbToken) {
+      sessionStorage.setItem("tmdb_token", tmdbToken);
+    } else {
+      sessionStorage.removeItem("tmdb_token");
+    }
+  }, [tmdbToken]);
 
   const handleDataReady = async (items: { originalTitle: string; rating: number }[]) => {
+    const decryptedToken = decryptToken(tmdbToken);
+    if (!tmdbToken || !decryptedToken) {
+      toast.error("Please configure your TMDB API Key in Settings first.");
+      // We don't advance the step if token is missing
+      return;
+    }
+
     setStep("processing");
     setData([]);
     setProgress(0);
@@ -31,14 +49,32 @@ export default function App() {
     // We process sequentially to avoid TMDB rate limits and show progress
     const matched: MatchedItem[] = [];
     for (let i = 0; i < items.length; i++) {
-        const result = await matchItems([items[i]]);
-        matched.push(...result);
+        try {
+          const result = await matchItems([items[i]], decryptedToken);
+          matched.push(...result);
+        } catch (err) {
+          console.error("Matching error:", err);
+          // If the token is invalid, we might want to stop early or just log
+          if (i === 0) {
+             toast.error("Failed to connect to TMDB. Please check your API Key in Settings.");
+             setStep("ingestion");
+             return;
+          }
+        }
         setProgress(i + 1);
     }
     
     setData(matched);
     setStep("qa");
     toast.success(`Successfully matched ${matched.length} items!`);
+  };
+
+  const handleSaveSettings = (newToken: string) => {
+    if (newToken) {
+      setTmdbToken(encryptToken(newToken));
+    } else {
+      setTmdbToken("");
+    }
   };
 
   const updateItem = (id: string, updates: Partial<MatchedItem>) => {
@@ -100,16 +136,24 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex gap-2 p-1 glass-panel rounded-full">
-            <div className={`step-pill ${step === 'ingestion' ? 'active' : ''}`}>1. Input</div>
-            <div className={`step-pill ${step === 'processing' ? 'active' : ''}`}>2. Match</div>
-            <div className={`step-pill ${step === 'qa' ? 'active' : ''}`}>3. Review</div>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2 p-1 glass-panel rounded-full">
+              <div className={`step-pill ${step === 'ingestion' ? 'active' : ''}`}>1. Input</div>
+              <div className={`step-pill ${step === 'processing' ? 'active' : ''}`}>2. Match</div>
+              <div className={`step-pill ${step === 'qa' ? 'active' : ''}`}>3. Review</div>
+            </div>
+            
+            <SettingsDialog onSave={handleSaveSettings} currentApiKey={tmdbToken} />
           </div>
         </header>
 
         <main className="flex-1">
           {step === "ingestion" && (
-            <IngestionPage onDataReady={handleDataReady} onRestore={handleRestore} />
+            <IngestionPage 
+              onDataReady={handleDataReady} 
+              onRestore={handleRestore} 
+              isConfigured={!!tmdbToken} 
+            />
           )}
 
           {step === "processing" && (
