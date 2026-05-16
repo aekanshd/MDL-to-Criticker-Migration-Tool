@@ -8,6 +8,7 @@ import { AlertCircle, Upload, User, FileText, Code, Download } from "lucide-reac
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { toast } from "sonner";
 import { MatchedItem } from "../types";
+import GoogleAd from "./GoogleAd";
 
 interface IngestionPageProps {
   onDataReady: (items: { originalTitle: string; rating: number }[]) => void;
@@ -233,6 +234,8 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRes
           </Card>
         </TabsContent>
       </Tabs>
+
+      <GoogleAd />
 
       <div className="flex flex-col items-center mt-12 bg-indigo-500/10 border border-indigo-500/30 p-6 rounded-2xl shadow-xl max-w-sm mx-auto">
         <div className="text-center mb-4">
