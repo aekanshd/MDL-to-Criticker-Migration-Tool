@@ -23,8 +23,8 @@ async function startServer() {
   // TMDB Proxy
   app.get("/api/tmdb/search", async (req, res) => {
     const { query } = req.query;
-    const token = process.env.TMDB_READ_ACCESS_TOKEN;
-    if (!token) return res.status(500).json({ error: "TMDB_READ_ACCESS_TOKEN is not configured" });
+    const token = req.headers["x-tmdb-token"] as string || process.env.TMDB_READ_ACCESS_TOKEN;
+    if (!token) return res.status(500).json({ error: "TMDB token is not configured" });
     try {
       const response = await axios.get(`https://api.themoviedb.org/3/search/multi`, {
         params: { query },
@@ -33,28 +33,30 @@ async function startServer() {
       const results = response.data.results.filter((i: any) => i.media_type === "movie" || i.media_type === "tv");
       res.json({ results });
     } catch (error: any) {
+      console.error("TMDB search failed:", error.response?.data || error.message);
       res.status(500).json({ error: "TMDB search failed" });
     }
   });
 
   app.get("/api/tmdb/external-ids", async (req, res) => {
     const { id, type } = req.query;
-    const token = process.env.TMDB_READ_ACCESS_TOKEN;
-    if (!token) return res.status(500).json({ error: "TMDB_READ_ACCESS_TOKEN is not configured" });
+    const token = req.headers["x-tmdb-token"] as string || process.env.TMDB_READ_ACCESS_TOKEN;
+    if (!token) return res.status(500).json({ error: "TMDB token is not configured" });
     try {
       const response = await axios.get(`https://api.themoviedb.org/3/${type}/${id}/external_ids`, {
         headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
       });
       res.json(response.data);
     } catch (error: any) {
+      console.error("Failed to fetch external IDs:", error.response?.data || error.message);
       res.status(500).json({ error: "Failed to fetch external IDs" });
     }
   });
 
   app.get("/api/tmdb/find-by-imdb", async (req, res) => {
     const { imdbId } = req.query;
-    const token = process.env.TMDB_READ_ACCESS_TOKEN;
-    if (!token) return res.status(500).json({ error: "TMDB_READ_ACCESS_TOKEN is not configured" });
+    const token = req.headers["x-tmdb-token"] as string || process.env.TMDB_READ_ACCESS_TOKEN;
+    if (!token) return res.status(500).json({ error: "TMDB token is not configured" });
     try {
       const response = await axios.get(`https://api.themoviedb.org/3/find/${imdbId}`, {
         params: { external_source: "imdb_id" },
@@ -67,6 +69,7 @@ async function startServer() {
         res.status(404).json({ error: "Not found on TMDB" });
       }
     } catch (error: any) {
+      console.error("TMDB find failed:", error.response?.data || error.message);
       res.status(500).json({ error: "TMDB find failed" });
     }
   });

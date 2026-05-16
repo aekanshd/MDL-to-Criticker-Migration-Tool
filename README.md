@@ -1,11 +1,4 @@
-<h1 align="center">MDL to Criticker Sync</h1>
-
-<p align="center">
-<a href="https://www.aekansh.in/">
-  <img width="1280" height="640" alt="Composio banner" src="./docs/banner.png">
-</a>
-
-</p>
+# MDL to Criticker Sync
 
 A migration tool designed to help users seamlessly transfer their watched drama and movie lists from MyDramaList (MDL) to Criticker. The tool fetches your ratings, matches them against the TMDB/IMDb database, and generates a formatted CSV file ready for import into Criticker.
 
@@ -19,6 +12,11 @@ A migration tool designed to help users seamlessly transfer their watched drama 
 - **Selective Export**: Export either all matched items or strictly the manually reviewed ones.
 
 ## 📖 How to Use
+
+### 0. API Configuration & Security
+Before you begin, click the **Settings (gear)** icon in the top right corner. 
+- You must provide a **TMDB API Read Access Token** to allow the application to find matching IMDb IDs.
+- **Privacy & Security:** Your API key is safely stored in your browser's `sessionStorage` and encrypted using AES encryption (`crypto-js`). It is dynamically decrypted only when making API calls, ensuring your security.
 
 ### 1. Extract Data from MyDramaList (Ingestion)
 
@@ -94,7 +92,7 @@ At the bottom of the review page, you can generate your final CSV for Criticker.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React, Vite, Tailwind CSS, shadcn/ui, framer-motion, lucide-react
+- **Frontend**: React, Vite, Tailwind CSS, shadcn/ui, framer-motion, lucide-react, crypto-js
 - **Backend/API**: Express (Node.js), Axios
 - **External Apis**: TMDB API
 
@@ -105,12 +103,9 @@ At the bottom of the review page, you can generate your final CSV for Criticker.
    ```bash
    npm install
    ```
-3. Create a `.env` file based on `.env.example` and add your TMDB API Key. 
-   *(You can get a TMDB API Key by registering an account at [The Movie Database (TMDB)](https://www.themoviedb.org/documentation/api))*
-   ```env
-   TMDB_READ_ACCESS_TOKEN=your_token_here
-   ```
-4. Start the development server:
+3. Start the development server:
    ```bash
    npm run dev
    ```
+4. Open the app and click the **Settings** icon to add your TMDB API Key.
+   *(Optional: You can also set it as an environment variable by creating a `.env` file with `TMDB_READ_ACCESS_TOKEN=your_token_here`).*

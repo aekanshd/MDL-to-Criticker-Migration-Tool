@@ -12,15 +12,28 @@ import { MatchedItem } from "../types";
 interface IngestionPageProps {
   onDataReady: (items: { originalTitle: string; rating: number }[]) => void;
   onRestore: (items: MatchedItem[]) => void;
+  isConfigured: boolean;
 }
 
-export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRestore }) => {
+export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRestore, isConfigured }) => {
   const [username, setUsername] = useState("");
   const [pastedData, setPastedData] = useState("");
   const [selectAllData, setSelectAllData] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleValidation = () => {
+    if (!isConfigured) {
+      toast.error("TMDB API Key Required", {
+        description: "Please click the settings icon in the top right to configure your API key.",
+        duration: 5000,
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Restore doesn't strictly need TMDB key yet, as it's just loading JSON
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -42,6 +55,7 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRes
   };
 
   const handleSelectAllSubmit = () => {
+    if (!handleValidation()) return;
     if (!selectAllData.trim()) return;
     
     const flattened = selectAllData.replace(/\n+/g, ' ').replace(/\t/g, ' ').replace(/\s+/g, ' ');
@@ -64,6 +78,7 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRes
   };
 
   const handleUsernameSubmit = () => {
+    if (!handleValidation()) return;
     // In a real world app, we'd fetch MDL here, but Cloudflare blocks us.
     if (username.trim()) {
       toast.error("Cloudflare blocked the request. Please use Raw Paste or PDF Upload instead.", { duration: 5000 });
@@ -71,6 +86,7 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRes
   };
 
   const handlePasteSubmit = () => {
+    if (!handleValidation()) return;
     // Advanced parsing for MDL titles/scores
     const lines = pastedData.split("\n");
     const parsed = lines
@@ -113,10 +129,21 @@ export const IngestionPage: React.FC<IngestionPageProps> = ({ onDataReady, onRes
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="text-center space-y-2 mb-12">
+      <div className="text-center space-y-2 mb-8">
         <h1 className="text-5xl font-bold tracking-tight text-white">Migration Hub</h1>
         <p className="text-indigo-300 italic font-serif">Seamlessly bridge your MyDramaList history to Criticker.</p>
       </div>
+
+      {!isConfigured && (
+        <Alert variant="destructive" className="bg-amber-500/10 border-amber-500/20 text-amber-500 mb-6 py-4 animate-pulse">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle className="font-bold">TMDB API Key Missing</AlertTitle>
+          <AlertDescription className="text-amber-200/80">
+            Please configure your **TMDB API Read Access Token** in the **Settings** (top right) before starting the migration. 
+            The matching process requires an API key to find correct IMDb IDs.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Tabs defaultValue="console" className="w-full">
         <TabsList className="grid w-full grid-cols-3 glass-panel p-1 rounded-xl h-12">
