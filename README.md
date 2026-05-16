@@ -1,4 +1,11 @@
-# MDL to Criticker Sync
+<h1 align="center">MDL to Criticker Sync</h1>
+
+<p align="center">
+<a href="https://www.aekansh.in/">
+  <img width="1280" height="640" alt="Composio banner" src="./docs/banner.png">
+</a>
+
+</p>
 
 A migration tool designed to help users seamlessly transfer their watched drama and movie lists from MyDramaList (MDL) to Criticker. The tool fetches your ratings, matches them against the TMDB/IMDb database, and generates a formatted CSV file ready for import into Criticker.
 
@@ -16,7 +23,7 @@ A migration tool designed to help users seamlessly transfer their watched drama 
 ### 0. API Configuration & Security
 Before you begin, click the **Settings (gear)** icon in the top right corner. 
 - You must provide a **TMDB API Read Access Token** to allow the application to find matching IMDb IDs.
-- **Privacy & Security:** Your API key is safely stored in your browser's `sessionStorage` and encrypted using AES encryption (`crypto-js`). It is dynamically decrypted only when making API calls, ensuring your security.
+- **Privacy & Security:** Your API key is safely encrypted and stored in your browser. It is not sent to the server except only when making API calls to TMDb.
 
 ### 1. Extract Data from MyDramaList (Ingestion)
 
