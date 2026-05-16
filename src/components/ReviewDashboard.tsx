@@ -11,12 +11,13 @@ import { getTitleByImdbId } from "../services/api";
 
 interface ReviewDashboardProps {
   items: MatchedItem[];
+  apiToken: string;
   onUpdateItem: (id: string, updates: Partial<MatchedItem>) => void;
   onRemoveItem: (id: string) => void;
   onExport: (type: "reviewed" | "all") => void;
 }
 
-export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdateItem, onRemoveItem, onExport }) => {
+export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, apiToken, onUpdateItem, onRemoveItem, onExport }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [overrideUrl, setOverrideUrl] = useState("");
   const [filter, setFilter] = useState("all");
@@ -63,7 +64,7 @@ export const ReviewDashboard: React.FC<ReviewDashboardProps> = ({ items, onUpdat
     }
 
     try {
-      const itemInfo = await getTitleByImdbId(imdbId);
+      const itemInfo = await getTitleByImdbId(imdbId, apiToken);
       onUpdateItem(id, {
         imdbId,
         imdbUrl: `https://www.imdb.com/title/${imdbId}/`,

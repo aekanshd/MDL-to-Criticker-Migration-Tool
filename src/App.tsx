@@ -163,6 +163,7 @@ export default function App() {
           {step === "qa" && (
             <ReviewDashboard 
               items={data} 
+              apiToken={decryptToken(tmdbToken)}
               onUpdateItem={updateItem} 
               onRemoveItem={removeItem}
               onExport={handleExport}
